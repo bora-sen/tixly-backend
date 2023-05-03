@@ -3,9 +3,10 @@ const { Schema, default: mongoose } = require("mongoose")
 const TicketSchema = new Schema({
   uuid: String,
   eventId: String,
-  public: String,
-  user: Object,
-  createdAd: {
+  publicId: String,
+  username: String,
+  displayName:String,
+  createdAt: {
     type: Date,
     default: Date.now(),
   },

@@ -18,6 +18,10 @@ const EventSchema = new Schema({
     type: Array,
     default: [],
   },
+  comments: {
+    type: Array,
+    default: [],
+  },
 })
 
 const Event = mongoose.model("Event", EventSchema)
