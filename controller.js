@@ -107,7 +107,7 @@ async function RemoveEvent(eventId) {
   }
 }
 
-async function getTicketByPublic(publicId) {
+async function getTicketByPublicId(publicId) {
   try {
     const sel_ticket = await Ticket.find({ public: publicId })
     return sel_ticket[0]
@@ -137,6 +137,6 @@ module.exports = {
   verifyUser,
   GetAllEvents,
   RemoveEventById,
-  getTicketByPublic,
+  getTicketByPublicId,
   DeleteTicketByPublic,
 }
