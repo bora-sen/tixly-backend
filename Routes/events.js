@@ -34,7 +34,7 @@ events.post("/create", validateRequest, async (req, res) => {
       new Date().toLocaleString(),
       `-> Event [${newEvent.uuid}] Created Successfully by [${newEvent.createdBy.username}]`
     )
-    res.send({ message: "Event is Created Successfully", data: newEvent })
+    res.send(newEvent)
   } catch (error) {
     console.log(error)
   }

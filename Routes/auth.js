@@ -2,7 +2,7 @@ const express = require("express")
 const auth = express.Router()
 auth.use(express.json())
 auth.use(express.urlencoded({ extended: true }))
-const { AddUser, verifyUser } = require("../controller")
+const { AddUser, verifyUser, getUserByName } = require("../controller")
 const jwt = require("jsonwebtoken")
 require("dotenv").config()
 
@@ -16,7 +16,7 @@ auth.post("/register", async (req, res) => {
       )
       res.send("User Is Created!")
     } else {
-      res.send("Username Already Exists")
+      res.sendStatus(400)
     }
   } catch (error) {
     console.log(error)
@@ -25,33 +25,25 @@ auth.post("/register", async (req, res) => {
 
 auth.post("/login", async (req, res) => {
   try {
-    const result = await verifyUser(req.body.username, req.body.password)
-    if (!result) {
-      res.sendStatus(400)
-    } else {
-      const accessToken = jwt.sign(
-        result.toJSON(),
-        process.env.JWT_ACCESS_SECRET
-      )
-      const refreshToken = jwt.sign(
-        result.toJSON(),
-        process.env.JWT_REFRESH_SECRET
-      )
+    const sel_user = await getUserByName(req.body.username)
+    if (sel_user.password === req.body.password) {
+      const accessToken = jwt.sign(sel_user.toJSON(), process.env.JWT_ACCESS_SECRET)
+      const refreshToken = jwt.sign(sel_user.toJSON(), process.env.JWT_REFRESH_SECRET)
 
-      console.log(
-        new Date().toLocaleString(),
-        `-> Logged In [${req.body.username}]`
-      )
       res.send({
-        refreshToken,
+        username: sel_user.username,
+        displayName: sel_user.displayName,
         accessToken,
+        refreshToken,
       })
+    } else {
+      res.sendStatus(400)
     }
   } catch (error) {
     console.log(error)
   }
 })
-auth.post("/refresh/", async (req, res) => {
+auth.post("/refresh", async (req, res) => {
   try {
     const { refreshToken } = req.body
     jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, decoded) => {

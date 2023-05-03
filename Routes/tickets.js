@@ -5,25 +5,38 @@ tickets.use(express.json())
 const { v4 } = require("uuid")
 const { validateRequest } = require("../Middlewares")
 const { Ticket } = require("../Models")
-const { getTicketByPublic, DeleteTicketByPublic } = require("../controller")
+const { getTicketByPublicId, DeleteTicketByPublic } = require("../controller")
+
+tickets.get("/", validateRequest, async (req, res) => {
+  try {
+    const tickets =
+      (await Ticket.find({ username: req.user.username })) ?? false
+    if (tickets) {
+      res.send(tickets)
+    } else {
+      res.sendStatus(400)
+    }
+  } catch (error) {
+    console.log(error)
+    res.sendStatus(500)
+  }
+})
 
 tickets.post("/generate/", validateRequest, async (req, res) => {
   try {
     const { eventId } = req.body
     const newTicketObj = {
       uuid: v4(),
-      public: v4(),
-      user: {
-        username: req.user.username,
-        displayName: req.user.displayName,
-      },
+      publicId: v4(),
+      username: req.user.username,
+      displayName: req.user.displayName,
       eventId,
     }
     const newTicket = new Ticket(newTicketObj)
     await newTicket.save()
     console.log(
       new Date().toLocaleString(),
-      `-> New Ticket Generated from [${newTicket.user.username}] -> to EventId -> [${newTicket.eventId}]`
+      `-> New Ticket Generated from [${newTicket.username}] -> to EventId -> [${newTicket.eventId}]`
     )
     res.send({ message: "Ticket is generated successfully", data: newTicket })
   } catch (error) {
@@ -31,25 +44,25 @@ tickets.post("/generate/", validateRequest, async (req, res) => {
     res.send(500)
   }
 })
-tickets.post("/validate/", validateRequest, async (req, res) => {
+tickets.post("/validate", validateRequest, async (req, res) => {
   try {
-    const { eventId } = req.body
-    const sel_ticket = await getTicketByPublic(req.body.public)
+    const { eventId, publicId } = req.body
+    const sel_ticket = await getTicketByPublicId(publicId)
     if (
       sel_ticket.user.username === req.user.username &&
       sel_ticket.eventId === eventId
     ) {
       console.log(
         new Date().toLocaleString(),
-        `-> [${sel_ticket.public}] is validated successfully`
+        `-> [${sel_ticket.publicId}] is validated successfully`
       )
-      res.sendStatus(200)
+      res.send("verified")
     } else {
-      res.sendStatus(400)
+      res.send("not-verified")
     }
   } catch (error) {
     console.log(error)
-    res.send(500)
+    res.sendStatus(500)
   }
 })
 tickets.delete("/delete/", validateRequest, async (req, res) => {
@@ -65,8 +78,8 @@ tickets.delete("/delete/", validateRequest, async (req, res) => {
         )
         res.sendStatus(200)
       } else {
-        res.sendStatus(400)
       }
+      res.sendStatus(400)
     } else {
       res.sendStatus(400)
     }
