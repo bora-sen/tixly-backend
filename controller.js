@@ -44,6 +44,14 @@ async function getEventById(eventId) {
     console.log(error)
   }
 }
+async function getEventsByUsername(username) {
+  try {
+    const sel_event = await Event.find({ createdBy: username })
+    return sel_event
+  } catch (error) {
+    console.log(error)
+  }
+}
 
 async function UpdateEventById(eventId, newEventObj) {
   try {
@@ -139,4 +147,5 @@ module.exports = {
   RemoveEventById,
   getTicketByPublicId,
   DeleteTicketByPublic,
+  getEventsByUsername,
 }
