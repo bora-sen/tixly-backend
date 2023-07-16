@@ -1,6 +1,11 @@
 const express = require("express")
-const { GetAllEvents, RemoveEventById, getEventById } = require("../controller")
-const { Event } = require("../Models")
+const {
+  GetAllEvents,
+  RemoveEventById,
+  getEventById,
+  getEventsByUsername,
+} = require("../controller")
+const { Event, User } = require("../Models")
 
 const events = express.Router()
 events.use(express.json())
@@ -15,18 +20,33 @@ events.get("/", async (req, res) => {
     console.log(error)
   }
 })
+events.get("/user/:username", async (req, res) => {
+  try {
+    const events = await getEventsByUsername(req.params.username)
+    res.send(events)
+  } catch (error) {
+    console.log(error)
+  }
+})
+
+events.get("/:eventId", async (req, res) => {
+  try {
+    const events = await getEventById(req.params.eventId)
+    res.send(events)
+  } catch (error) {
+    console.log(error)
+  }
+})
 events.post("/create", validateRequest, async (req, res) => {
   try {
-    const { title, description, maxPeople } = req.body
+    const { title, description, maxPeople, placeholderURL } = req.body
     const newEventObj = {
       uuid: v4(),
       title,
       description,
       maxPeople,
-      createdBy: {
-        displayName: req.user.displayName,
-        username: req.user.username,
-      },
+      createdBy: req.user.username,
+      placeholderURL,
     }
     const newEvent = new Event(newEventObj)
     await newEvent.save()
@@ -43,8 +63,8 @@ events.delete("/delete", validateRequest, async (req, res) => {
   try {
     const { eventId } = req.body
     const sel_event = await getEventById(eventId)
-    if (sel_event.createdBy.username === req.user.username) {
-      await RemoveEventById(eventId)
+    if (sel_event.createdBy === req.user.username) {
+      await Event.deleteOne({ uuid: eventId })
       console.log(
         new Date().toLocaleString(),
         `-> Event [${sel_event.uuid}] is Deleted Successfully`
