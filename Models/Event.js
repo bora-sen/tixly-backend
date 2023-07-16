@@ -2,13 +2,23 @@ const { Schema, default: mongoose } = require("mongoose")
 
 const EventSchema = new Schema({
   uuid: String,
-  title: String,
-  description: String,
+  title: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+    required: true,
+  },
+  placeholderURL: {
+    type: String,
+    required: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
   },
-  createdBy: Object,
+  createdBy: String,
   maxPeople: Number,
   peopleJoined: {
     type: Number,
