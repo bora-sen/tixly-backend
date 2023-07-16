@@ -4,18 +4,15 @@ tickets.use(express.json())
 
 const { v4 } = require("uuid")
 const { validateRequest } = require("../Middlewares")
-const { Ticket } = require("../Models")
+const { Ticket, Event } = require("../Models")
 const { getTicketByPublicId, DeleteTicketByPublic } = require("../controller")
 
 tickets.get("/", validateRequest, async (req, res) => {
   try {
     const tickets =
       (await Ticket.find({ username: req.user.username })) ?? false
-    if (tickets) {
-      res.send(tickets)
-    } else {
-      res.sendStatus(400)
-    }
+
+    res.send(tickets)
   } catch (error) {
     console.log(error)
     res.sendStatus(500)
@@ -24,24 +21,32 @@ tickets.get("/", validateRequest, async (req, res) => {
 
 tickets.post("/generate/", validateRequest, async (req, res) => {
   try {
-    const { eventId } = req.body
+    const { eventId, eventTitle, eventDescription } = req.body
     const newTicketObj = {
       uuid: v4(),
       publicId: v4(),
+      eventTitle: eventTitle,
+      eventDescription: eventDescription,
       username: req.user.username,
       displayName: req.user.displayName,
       eventId,
     }
     const newTicket = new Ticket(newTicketObj)
     await newTicket.save()
+
+    const filter = { uuid: eventId }
+    const sel_event = await Event.findOne(filter)
+    const update = { peopleJoined: sel_event.peopleJoined + 1 }
+    await Event.findOneAndUpdate(filter, update)
+
     console.log(
       new Date().toLocaleString(),
       `-> New Ticket Generated from [${newTicket.username}] -> to EventId -> [${newTicket.eventId}]`
     )
-    res.send({ message: "Ticket is generated successfully", data: newTicket })
+    res.send(newTicketObj)
   } catch (error) {
     console.log(error)
-    res.send(500)
+    res.sendStatus(500)
   }
 })
 tickets.post("/validate", validateRequest, async (req, res) => {
