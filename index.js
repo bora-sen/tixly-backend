@@ -12,5 +12,5 @@ app.use("/events/", events)
 app.use("/tickets/", tickets)
 
 app.listen(port, () => {
-  console.log(new Date().toLocaleString(), "-> Back-end Server is Started")
+  console.log(new Date().toLocaleString(), "-> Back-end Server is Started on port - ",port)
 })
